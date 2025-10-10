@@ -1,0 +1,106 @@
+# ===============================================
+# Vancoillie IT Hulp - Newsfeed App (.gitignore)
+# ===============================================
+
+# ---------------
+# XCODE / SWIFT
+# ---------------
+# User-specifieke instellingen
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+DerivedData/
+build/
+*.hmap
+*.ipa
+*.dSYM
+*.DS_Store
+
+# Snelkoppelingen van Swift Package Manager
+.swiftpm/
+Package.resolved
+
+# Tuples en logs
+*.log
+*.xcactivitylog
+
+# Preview en simulator data
+*.xcuserdatad
+*.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+*.playground
+*.playgroundbook
+
+# iOS device support
+.idea/
+Pods/
+Carthage/
+Carthage/Build/
+Carthage/Checkouts/
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+
+# App-gerelateerde bestanden (keeps only source code)
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+
+# ---------------
+# PHP / BACKEND
+# ---------------
+# Config & gevoelige data
+/news/config.php
+/news/config-local.php
+/news/api.php.bak
+
+# Uploads, logs en tijdelijk
+/news/admin/uploads/
+!/news/admin/uploads/.gitkeep
+/news/logs/
+*.log
+*.bak
+*.tmp
+*.swp
+
+# IDE bestanden
+.vscode/
+.idea/
+
+# Cache-bestanden en OS-sporen
+Thumbs.db
+.DS_Store
+*.orig
+
+# ---------------
+# ENVIRONMENTS / SECRETS
+# ---------------
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.crt
+*.cert
+*.p12
+*.mobileprovision
+
+# ---------------
+# MISC
+# ---------------
+# Lokale testbestanden of scripts
+test_*.php
+local_*.php
+debug_*.php
+
+# Node, Python of andere tools (indien ooit gebruikt)
+node_modules/
+__pycache__/
+
+# ---------------
+# DOCUMENTEN
+# ---------------
+# Automatisch gegenereerde documenten / exporten
+*.pdf
+*.docx
+*.xlsx
+*.zip
+*.tar

@@ -28,7 +28,7 @@ struct ArticlesView: View {
                         }
                         .pickerStyle(.navigationLink)
                         .onChange(of: vm.selectedCategory) { _, _ in
-                            Task { await vm.reloadArticles() }
+                            Task { await vm.userRefresh() }
                         }
                     }
                 }

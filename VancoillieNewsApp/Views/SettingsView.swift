@@ -11,6 +11,10 @@ import UserNotifications
 struct SettingsView: View {
     @AppStorage("notifications.enabled") private var notificationsEnabled = false
     @AppStorage("app.theme") private var themeRaw: String = AppTheme.system.rawValue
+
+    // ▼ Nieuw: taalkeuze (default NL)
+    @AppStorage("app.language") private var languageRaw: String = "nl"
+
     @State private var showSettingsAlert = false
 
     var body: some View {
@@ -54,6 +58,20 @@ struct SettingsView: View {
                     Text(NSLocalizedString("settings.push_info", comment: ""))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                }
+
+                // MARK: Language  ▼ NIEUW
+                Section(header: Text(NSLocalizedString("settings.language", comment: ""))) {
+                    Picker(NSLocalizedString("settings.language_picker", comment: ""),
+                           selection: $languageRaw) {
+                        Text(NSLocalizedString("lang.nl", comment: "")).tag("nl")
+                        Text(NSLocalizedString("lang.en", comment: "")).tag("en")
+                    }
+                    .pickerStyle(.segmented)
+                    .onChange(of: languageRaw) { _, _ in
+                        // Laat viewmodels weten dat taal gewijzigd werd
+                        NotificationCenter.default.post(name: .appLanguageChanged, object: nil)
+                    }
                 }
 
                 // MARK: Appearance

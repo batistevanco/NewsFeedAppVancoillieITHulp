@@ -88,7 +88,7 @@ final class NotificationManager {
         let oneKey = "notif.one"
         let manyKey = "notif.many"
 
-        let title = NSLocalizedString(titleKey, tableName: nil, bundle: .main, value: localeCode == "en" ? "App" : "App", comment: "")
+        let title = NSLocalizedString(titleKey, tableName: nil, bundle: .main, value: localeCode == "en" ? "Vancoillie News" : "Vancoillie News", comment: "")
         content.title = title
 
         if count == 1 {

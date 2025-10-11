@@ -1,22 +1,24 @@
 import SwiftUI
 
 enum AppTheme: String, CaseIterable, Identifiable {
-    case light, dark, system
+    case system, light, dark
     var id: String { rawValue }
 
-    var colorScheme: ColorScheme? {
+    // Gebruik je eigen vertaalde labels als je die al had
+    var localizedLabel: String {
         switch self {
-        case .light: return .light
-        case .dark:  return .dark
-        case .system: return nil
+        case .system: return NSLocalizedString("settings.theme.system", comment: "")
+        case .light:  return NSLocalizedString("settings.theme.light", comment: "")
+        case .dark:   return NSLocalizedString("settings.theme.dark", comment: "")
         }
     }
 
-    var localizedLabel: String {
+    // ❗️Belangrijk: mapping naar SwiftUI color scheme
+    var colorScheme: ColorScheme? {
         switch self {
-        case .light:  return NSLocalizedString("theme.light", comment: "")
-        case .dark:   return NSLocalizedString("theme.dark", comment: "")
-        case .system: return NSLocalizedString("theme.auto", comment: "")
+        case .system: return nil
+        case .light:  return .light
+        case .dark:   return .dark
         }
     }
 }

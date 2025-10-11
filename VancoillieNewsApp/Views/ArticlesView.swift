@@ -1,51 +1,48 @@
-//
-//  ArticlesView.swift
-//  VancoillieNewsApp
-//
-//  Created by Batiste Vancoillie on 10/10/2025.
-//
-
-
 import SwiftUI
 
 struct ArticlesView: View {
     @StateObject private var vm = ArticlesViewModel()
+    // Ensure default selectedCategory is nil so "All" is selected at app startup
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            List {
                 if !vm.categories.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(vm.categories) { cat in
-                                Button {
-                                    vm.selectedCategory = cat
-                                    Task { try? await vm.reloadArticles() }
-                                } label: {
-                                    Text(cat.name)
-                                        .padding(.horizontal, 12).padding(.vertical, 8)
-                                        .background(vm.selectedCategory == cat ? Brand.blue.opacity(0.15) : Color.gray.opacity(0.12))
-                                        .foregroundColor(vm.selectedCategory == cat ? Brand.blue : .primary)
-                                        .clipShape(Capsule())
-                                }
+                    Section(NSLocalizedString("articles.categories", comment: "")) {
+                        Picker(NSLocalizedString("articles.category_picker", comment: ""),
+                               selection: $vm.selectedCategory) {
+                            // belangrijk: tags matchen het type van 'selection' (Category?)
+                            Text(NSLocalizedString("articles.all", comment: ""))
+                                .tag(nil as Category?)
+
+                            ForEach(vm.categories) { c in
+                                Text(c.name)
+                                    .tag(c as Category?)
                             }
-                        }.padding(.horizontal).padding(.vertical, 8)
+                        }
+                        .pickerStyle(.navigationLink)
+                        .onChange(of: vm.selectedCategory) { _, _ in
+                            Task { await vm.reloadArticles() }
+                        }
                     }
                 }
 
-                List(vm.articles) { a in
-                    ArticleRow(article: a)
-                }
-                .listStyle(.plain)
-                .overlay {
-                    if vm.isLoading { ProgressView() }
-                }
-                .refreshable {
-                    try? await vm.reloadArticles()
+                Section(NSLocalizedString("articles.list", comment: "")) {
+                    ForEach(vm.articles) { a in
+                        NavigationLink {
+                            ArticleDetailView(article: a)
+                        } label: {
+                            ArticleRow(article: a)
+                        }
+                    }
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle(NSLocalizedString("articles.title", comment: ""))
-            .task { await vm.load() }
+        }
+        .task { await vm.load() }
+        .onAppear {
+            vm.selectedCategory = nil
         }
     }
 }

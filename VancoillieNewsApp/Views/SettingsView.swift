@@ -2,43 +2,61 @@
 //  SettingsView.swift
 //  VancoillieNewsApp
 //
-//  Created by Batiste Vancoillie on 10/10/2025.
+//  Updated to always schedule a daily notification at 17:00
 //
 
-
 import SwiftUI
+import UserNotifications
 
 struct SettingsView: View {
-    @AppStorage("notifications.enabled") private var notificationsEnabled = true
-    @AppStorage("notifications.hour") private var notifHour: Int = 9
-    @AppStorage("notifications.minute") private var notifMinute: Int = 0
+    @AppStorage("notifications.enabled") private var notificationsEnabled = false
     @AppStorage("app.theme") private var themeRaw: String = AppTheme.system.rawValue
+    @State private var showSettingsAlert = false
 
     var body: some View {
         NavigationStack {
             Form {
+                // MARK: Notifications
                 Section(header: Text(NSLocalizedString("settings.notifications", comment: ""))) {
-                        Toggle(NSLocalizedString("settings.push", comment: ""), isOn: $notificationsEnabled)
-                            .onChange(of: notificationsEnabled) { _, on in
-                                if on {
-                                    NotificationManager.shared.requestIfNeeded()
-                                    scheduleLatestNotificationAtCurrentTime()
-                                } else {
-                                    NotificationManager.shared.cancelAll()
+                    Toggle(NSLocalizedString("settings.push", comment: ""), isOn: $notificationsEnabled)
+                        .onChange(of: notificationsEnabled) { _, on in
+                            if on {
+                                UNUserNotificationCenter.current().getNotificationSettings { settings in
+                                    switch settings.authorizationStatus {
+                                    case .notDetermined:
+                                        NotificationManager.shared.requestIfNeeded { granted in
+                                            DispatchQueue.main.async {
+                                                if granted {
+                                                    NotificationManager.shared.scheduleDaily(title: "", body: "", hour: 17, minute: 0)
+                                                } else {
+                                                    notificationsEnabled = false
+                                                }
+                                            }
+                                        }
+                                    case .denied:
+                                        DispatchQueue.main.async {
+                                            notificationsEnabled = false
+                                            showSettingsAlert = true
+                                        }
+                                    case .authorized, .provisional, .ephemeral:
+                                        NotificationManager.shared.scheduleDaily(title: "", body: "", hour: 17, minute: 0)
+                                    @unknown default:
+                                        DispatchQueue.main.async {
+                                            notificationsEnabled = false
+                                        }
+                                    }
                                 }
+                            } else {
+                                NotificationManager.shared.cancelAll()
                             }
+                        }
 
-                        DatePicker(selection: bindingForTime(), displayedComponents: .hourAndMinute) {
-                            Text(NSLocalizedString("settings.time", comment: ""))
-                        }
-                        .onChange(of: notifHour) { _, _ in
-                            reschedule()
-                        }
-                        .onChange(of: notifMinute) { _, _ in
-                            reschedule()
-                        }
-                    }
+                    Text(NSLocalizedString("settings.push_info", comment: ""))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
 
+                // MARK: Appearance
                 Section(header: Text(NSLocalizedString("settings.appearance", comment: ""))) {
                     Picker(NSLocalizedString("settings.theme", comment: ""), selection: $themeRaw) {
                         ForEach(AppTheme.allCases) { t in
@@ -47,6 +65,7 @@ struct SettingsView: View {
                     }
                 }
 
+                // MARK: Build version
                 Section(footer: Text("Vancoillie IT Hulp")) {
                     HStack {
                         Text(NSLocalizedString("settings.version", comment: ""))
@@ -55,6 +74,7 @@ struct SettingsView: View {
                     }
                 }
 
+                // MARK: Support & Privacy
                 Section(header: Text(NSLocalizedString("settings.support", comment: ""))) {
                     Button(action: {
                         if let url = URL(string: "mailto:info@vancoillieithulp.be") {
@@ -69,60 +89,30 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(NSLocalizedString("settings.title", comment: ""))
-        }
-    }
-    
-    private func scheduleLatestNotificationAtCurrentTime() {
-        Task {
-            do {
-                let articles = try await APIClient.shared.fetchArticles(
-                    locale: LocaleHelper.appLangParam,
-                    categoryID: nil
-                )
-                let latest = articles.first
-                let title = latest?.title ?? "Vancoillie IT Hulp"
-                // Kort de body eventueel in zodat de banner mooi past
-                let body = latest?.description != nil
-                               ? String(latest!.description.prefix(100)) + "…"
-                               : "Nieuwe artikels zijn beschikbaar."
-
-                NotificationManager.shared.scheduleDaily(
-                    title: title,
-                    body: body,
-                    hour: notifHour,
-                    minute: notifMinute
-                )
-            } catch {
-                // Fallback bij fout of geen internet
-                NotificationManager.shared.scheduleDaily(
-                    title: "Vancoillie IT Hulp",
-                    body: "Nieuwe artikels zijn beschikbaar.",
-                    hour: notifHour,
-                    minute: notifMinute
+            .alert(isPresented: $showSettingsAlert) {
+                Alert(
+                    title: Text(NSLocalizedString("notif.settings_title", comment: "")),
+                    message: Text(NSLocalizedString("notif.settings_msg", comment: "")),
+                    primaryButton: .default(Text(NSLocalizedString("notif.settings_open", comment: "")), action: {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    }),
+                    secondaryButton: .cancel(Text(NSLocalizedString("general.cancel", comment: "")))
                 )
             }
-        }
-    }
-
-    private func bindingForTime() -> Binding<Date> {
-        Binding<Date>(
-            get: {
-                var comps = DateComponents()
-                comps.hour = notifHour; comps.minute = notifMinute
-                return Calendar.current.date(from: comps) ?? Date()
-            },
-            set: { date in
-                let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
-                notifHour = comps.hour ?? 9
-                notifMinute = comps.minute ?? 0
+            .task {
+                let settings = await UNUserNotificationCenter.current().notificationSettings()
+                await MainActor.run {
+                    switch settings.authorizationStatus {
+                    case .authorized, .provisional, .ephemeral:
+                        notificationsEnabled = true
+                    default:
+                        notificationsEnabled = false
+                    }
+                }
             }
-        )
-    }
-
-    private func reschedule() {
-        guard notificationsEnabled else { return }
-        NotificationManager.shared.cancelAll()
-        scheduleLatestNotificationAtCurrentTime()
+        }
     }
 
     private var versionString: String {

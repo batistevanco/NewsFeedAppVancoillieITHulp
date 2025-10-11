@@ -6,7 +6,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
 
         UNUserNotificationCenter.current().delegate = self
-        NotificationManager.shared.requestIfNeeded()
+        NotificationManager.shared.requestIfNeeded { granted in
+            if granted {
+                NotificationManager.shared.scheduleDaily(title: "", body: "", hour: 17, minute: 0)
+            }
+        }
         return true
     }
 

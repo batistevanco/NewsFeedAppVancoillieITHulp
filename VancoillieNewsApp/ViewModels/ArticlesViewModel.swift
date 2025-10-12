@@ -13,9 +13,13 @@ final class ArticlesViewModel: ObservableObject {
     @Published var articles: [Article] = []
     @Published var selectedCategory: Category? = nil
     @Published var isLoading = false
-    @Published var error: String?
+    @Published var error: Error?
 
     private var cancellables = Set<AnyCancellable>()
+
+    // Eén lopende fetch tegelijk
+    private var currentTask: Task<Void, Never>? = nil
+    private var fetchToken: Int = 0
 
     init() {
         // Als gebruiker taal wijzigt in Settings → onmiddellijk herladen
@@ -32,51 +36,66 @@ final class ArticlesViewModel: ObservableObject {
         languageRaw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "en" ? "en" : "nl"
     }
 
-    // Initieel laden (categories + articles)
+    // MARK: - Public API
+
+    /// Initieel laden (categories + articles)
     func load() async {
-        error = nil
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            let cats = try await APIClient.shared.fetchCategories(locale: lang)
-            categories = cats
-
-            // Houd selectie stabiel, zo niet -> reset naar Alle
-            if let sel = selectedCategory,
-               cats.contains(where: { $0.id == sel.id }) == false {
-                selectedCategory = nil
-            }
-
-            try await reloadArticles()
-        } catch {
-            self.error = error.localizedDescription
-            self.articles = []
-        }
+        await runFetch(loadCategories: true)
     }
 
-    // Enkel artikels opnieuw laden (bij pull-to-refresh of categorie wijziging)
+    /// Enkel artikels opnieuw laden (bij pull-to-refresh of categorie wijziging)
     func reloadArticles() async throws {
-        error = nil
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            let cid = selectedCategory?.id
-            let list = try await APIClient.shared.fetchArticles(locale: lang, categoryID: cid)
-            self.articles = list
-        } catch {
-            self.error = error.localizedDescription
-            self.articles = []
-            throw error
-        }
+        // gooi niets door naar boven; we beheren zelf de foutstatus in `error`
+        await runFetch(loadCategories: false)
     }
 
-    // Handig voor .refreshable in Views
+    /// Handig voor .refreshable in Views
     func userRefresh() async {
-        do {
-            try await reloadArticles()
-        } catch { /* error reeds gezet */ }
+        await runFetch(loadCategories: false)
+    }
+
+    // MARK: - Core fetch
+
+    private func runFetch(loadCategories: Bool) async {
+        // voorkom dubbele loads door vorige task te annuleren
+        currentTask?.cancel()
+        fetchToken &+= 1
+        let token = fetchToken
+
+        isLoading = true
+        error = nil
+
+        let task = Task { [weak self] in
+            guard let self else { return }
+            do {
+                if loadCategories {
+                    let cats = try await APIClient.shared.fetchCategories(locale: self.lang)
+                    // selectie stabiel houden
+                    if let sel = self.selectedCategory,
+                       cats.contains(where: { $0.id == sel.id }) == false {
+                        self.selectedCategory = nil
+                    }
+                    self.categories = cats
+                }
+
+                let cid = self.selectedCategory?.id
+                let list = try await APIClient.shared.fetchArticles(locale: self.lang, categoryID: cid)
+                self.articles = list
+                self.error = nil
+            } catch is CancellationError {
+                // genegeerd: er is een nieuwere task gestart
+            } catch {
+                self.error = error
+                self.articles = []
+            }
+        }
+
+        currentTask = task
+        await task.value
+        if fetchToken == token {
+            currentTask = nil
+        }
+        isLoading = false
     }
 }
 

@@ -6,7 +6,8 @@ private enum UI {
 }
 
 struct ArticlesView: View {
-    @StateObject private var vm = ArticlesViewModel()
+    @AppStorage("pref.lang") private var selectedLanguage: String = "nl"
+    @StateObject private var vm = ArticlesViewModel()  
 
     private var navTitle: String {
         let t = NSLocalizedString("articles.title", comment: "")
@@ -15,42 +16,54 @@ struct ArticlesView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                // Categorieën
-                if !vm.categories.isEmpty {
-                    Section(header: SectionHeader(title: NSLocalizedString("articles.categories", comment: ""))) {
-                        Picker(NSLocalizedString("articles.category_picker", comment: ""), selection: $vm.selectedCategory) {
-                            Text(NSLocalizedString("articles.all", comment: ""))
-                                .tag(nil as Category?)
-                            ForEach(vm.categories) { c in
-                                Text(c.name).tag(c as Category?)
+            ZStack {
+                Color(UIColor.systemBackground).ignoresSafeArea()
+
+                if vm.isLoading && vm.articles.isEmpty {
+                    ProgressView()
+                        .scaleEffect(2)
+                } else if let error = vm.error, vm.articles.isEmpty {
+                    ContentUnavailableView(
+                        "Kan niet laden",
+                        systemImage: "exclamationmark.triangle",
+                        description: Text(error.localizedDescription)
+                    )
+                } else {
+                    List {
+                        // Categorieën
+                        if !vm.categories.isEmpty {
+                            Section(header: SectionHeader(title: NSLocalizedString("articles.categories", comment: ""))) {
+                                Picker(NSLocalizedString("articles.category_picker", comment: ""), selection: $vm.selectedCategory) {
+                                    Text(NSLocalizedString("articles.all", comment: ""))
+                                        .tag(nil as Category?)
+                                    ForEach(vm.categories) { c in
+                                        Text(c.name).tag(c as Category?)
+                                    }
+                                }
+                                .pickerStyle(.navigationLink)
                             }
                         }
-                        .pickerStyle(.navigationLink)
-                        .onChange(of: vm.selectedCategory) { _, _ in
-                            Task { await vm.userRefresh() }
-                        }
-                    }
-                }
 
-                // Artikellijst
-                Section(header: SectionHeader(title: NSLocalizedString("articles.list", comment: ""))) {
-                    ForEach(vm.articles) { a in
-                        NavigationLink {
-                            ArticleDetailView(article: a)
-                        } label: {
-                            ArticleRowModern(article: a)
+                        // Artikellijst
+                        Section(header: SectionHeader(title: NSLocalizedString("articles.list", comment: ""))) {
+                            ForEach(vm.articles) { a in
+                                NavigationLink {
+                                    ArticleDetailView(article: a)
+                                } label: {
+                                    ArticleRowModern(article: a)
+                                }
+                                .buttonStyle(.plain)
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                            }
                         }
-                        .buttonStyle(.plain)
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .contentMargins(.vertical, UI.rowSpacing)
+                    .refreshable { await vm.load() }
                 }
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .contentMargins(.vertical, UI.rowSpacing)
-            .refreshable { await vm.load() }
             // Grote custom titel zoals in HomeView
             .safeAreaInset(edge: .top) {
                 HStack { // left aligned
@@ -65,6 +78,8 @@ struct ArticlesView: View {
             }
         }
         .task { await vm.load() }
+        .task(id: selectedLanguage) { await vm.userRefresh() }
+        .task(id: vm.selectedCategory?.id) { await vm.userRefresh() }
         .onAppear { vm.selectedCategory = vm.selectedCategory } // keep selection, ensure state
     }
 }

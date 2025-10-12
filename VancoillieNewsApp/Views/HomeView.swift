@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject private var vm = ArticlesViewModel()
+    @AppStorage("pref.lang") private var selectedLanguage: String = "nl"
 
     private var navTitle: String {
         let t = NSLocalizedString("home.title", comment: "")
@@ -16,8 +17,14 @@ struct HomeView: View {
                     .ignoresSafeArea(.container, edges: [.bottom])
 
                 Group {
-                    if vm.isLoading {
-                        ProgressView()
+                    if vm.isLoading && vm.articles.isEmpty {
+                        ProgressView().controlSize(.large)
+                    } else if let err = vm.error, vm.articles.isEmpty {
+                        ContentUnavailableView(
+                            NSLocalizedString("state.load_failed", comment: ""),
+                            systemImage: "exclamationmark.triangle",
+                            description: Text(err.localizedDescription)
+                        )
                     } else if vm.articles.isEmpty {
                         ContentUnavailableView(
                             NSLocalizedString("state.no_articles", comment: ""),
@@ -77,7 +84,7 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
         }
-        .task { await vm.load() }
+        .task(id: selectedLanguage) { await vm.load() }
     }
 }
 

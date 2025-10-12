@@ -16,21 +16,34 @@ final class APIClient {
     // Pas aan indien je pad anders is
     private let baseURL = URL(string: "https://www.vancoillieithulp.be/news/")!
 
-    // Gedeelde sessie met cache (sneller en zuiniger)
-    private lazy var session: URLSession = {
+    // Sessies met expliciete timeouts zodat requests nooit eindeloos blijven hangen
+    private let session: URLSession = {
+        let cfg = URLSessionConfiguration.default
         let cache = URLCache(
-            memoryCapacity: 50 * 1024 * 1024, // 50 MB
-            diskCapacity: 200 * 1024 * 1024,  // 200 MB
+            memoryCapacity: 50 * 1024 * 1024,  // 50 MB
+            diskCapacity: 200 * 1024 * 1024,   // 200 MB
             diskPath: "URLCache"
         )
-        let cfg = URLSessionConfiguration.default
-        cfg.requestCachePolicy = .reloadRevalidatingCacheData
         cfg.urlCache = cache
+        cfg.requestCachePolicy = .reloadRevalidatingCacheData
         cfg.waitsForConnectivity = true
-        cfg.timeoutIntervalForRequest = 20
-        cfg.timeoutIntervalForResource = 40
+        cfg.timeoutIntervalForRequest = 15   // 15s per request
+        cfg.timeoutIntervalForResource = 30  // 30s totale resource
         return URLSession(configuration: cfg)
     }()
+
+    // Eenduidige data-helper met korte timeout + 200-range check
+    private func data(for url: URL) async throws -> Data {
+        var req = URLRequest(url: url)
+        req.cachePolicy = .returnCacheDataElseLoad
+        req.timeoutInterval = 15
+        let (data, resp) = try await session.data(for: req)
+        guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            let text = String(data: data, encoding: .utf8) ?? ""
+            throw APIError(message: "HTTP fout: \((resp as? HTTPURLResponse)?.statusCode ?? -1) \n\(text)")
+        }
+        return data
+    }
 
     struct APIError: LocalizedError {
         let message: String
@@ -48,12 +61,7 @@ final class APIClient {
         ]
         guard let url = comps.url else { throw APIError(message: "Bad URL (categories)") }
 
-        var req = URLRequest(url: url)
-        req.cachePolicy = .reloadRevalidatingCacheData
-
-        let (data, resp) = try await session.data(for: req)
-        try validate(resp, data: data)
-
+        let data = try await data(for: url)
         return try JSONDecoder.apiDecoder().decode([Category].self, from: data)
     }
 
@@ -70,12 +78,7 @@ final class APIClient {
         comps.queryItems = items
         guard let url = comps.url else { throw APIError(message: "Bad URL (articles)") }
 
-        var req = URLRequest(url: url)
-        req.cachePolicy = .reloadRevalidatingCacheData
-
-        let (data, resp) = try await session.data(for: req)
-        try validate(resp, data: data)
-
+        let data = try await data(for: url)
         return try JSONDecoder.apiDecoder().decode([Article].self, from: data)
     }
 

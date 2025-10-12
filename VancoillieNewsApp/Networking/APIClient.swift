@@ -33,9 +33,9 @@ final class APIClient {
     }()
 
     // Eenduidige data-helper met korte timeout + 200-range check
-    private func data(for url: URL) async throws -> Data {
+    private func data(for url: URL, forceRefresh: Bool = false) async throws -> Data {
         var req = URLRequest(url: url)
-        req.cachePolicy = .returnCacheDataElseLoad
+        req.cachePolicy = forceRefresh ? .reloadIgnoringLocalCacheData : .returnCacheDataElseLoad
         req.timeoutInterval = 15
         let (data, resp) = try await session.data(for: req)
         guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
@@ -53,7 +53,7 @@ final class APIClient {
     // MARK: - Public API
 
     /// Haal categorieën op in de gevraagde taal ("nl" of "en").
-    func fetchCategories(locale: String) async throws -> [Category] {
+    func fetchCategories(locale: String, forceRefresh: Bool = false) async throws -> [Category] {
         var comps = URLComponents(url: baseURL.appendingPathComponent("api.php"), resolvingAgainstBaseURL: false)!
         comps.queryItems = [
             .init(name: "action", value: "categories"),
@@ -61,12 +61,12 @@ final class APIClient {
         ]
         guard let url = comps.url else { throw APIError(message: "Bad URL (categories)") }
 
-        let data = try await data(for: url)
+        let data = try await data(for: url, forceRefresh: forceRefresh)
         return try JSONDecoder.apiDecoder().decode([Category].self, from: data)
     }
 
     /// Haal artikels op in de gevraagde taal ("nl" of "en"), optioneel gefilterd op categorie.
-    func fetchArticles(locale: String, categoryID: Int?) async throws -> [Article] {
+    func fetchArticles(locale: String, categoryID: Int?, forceRefresh: Bool = false) async throws -> [Article] {
         var comps = URLComponents(url: baseURL.appendingPathComponent("api.php"), resolvingAgainstBaseURL: false)!
         var items: [URLQueryItem] = [
             .init(name: "action", value: "articles"),
@@ -78,7 +78,7 @@ final class APIClient {
         comps.queryItems = items
         guard let url = comps.url else { throw APIError(message: "Bad URL (articles)") }
 
-        let data = try await data(for: url)
+        let data = try await data(for: url, forceRefresh: forceRefresh)
         return try JSONDecoder.apiDecoder().decode([Article].self, from: data)
     }
 

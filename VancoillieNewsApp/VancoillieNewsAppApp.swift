@@ -11,9 +11,9 @@ struct VancoillieNewsAppApp: App {
                     RootView()
                         .preferredColorScheme(AppTheme(rawValue: themeRaw)?.colorScheme)
                 }
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active, notificationsEnabled {
-                NotificationManager.shared.scheduleDaily(title: "", body: "", hour: 17, minute: 0)
+        .onChange(of: scenePhase) {
+            if scenePhase == .active, notificationsEnabled {
+                NotificationManager.shared.scheduleDaily()
             }
         }
     }

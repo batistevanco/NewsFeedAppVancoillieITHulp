@@ -40,23 +40,27 @@ final class ArticlesViewModel: ObservableObject {
 
     /// Initieel laden (categories + articles)
     func load() async {
-        await runFetch(loadCategories: true)
+        await runFetch(loadCategories: true, forceRefresh: false)
     }
 
     /// Enkel artikels opnieuw laden (bij pull-to-refresh of categorie wijziging)
     func reloadArticles() async throws {
         // gooi niets door naar boven; we beheren zelf de foutstatus in `error`
-        await runFetch(loadCategories: false)
+        await runFetch(loadCategories: false, forceRefresh: true)
     }
 
     /// Handig voor .refreshable in Views
     func userRefresh() async {
-        await runFetch(loadCategories: false)
+        await runFetch(loadCategories: false, forceRefresh: true)
+    }
+    
+    func languageChangedRefresh() async {
+        await runFetch(loadCategories: true, forceRefresh: true)
     }
 
     // MARK: - Core fetch
 
-    private func runFetch(loadCategories: Bool) async {
+    private func runFetch(loadCategories: Bool, forceRefresh: Bool = false) async {
         // voorkom dubbele loads door vorige task te annuleren
         currentTask?.cancel()
         fetchToken &+= 1
@@ -69,7 +73,7 @@ final class ArticlesViewModel: ObservableObject {
             guard let self else { return }
             do {
                 if loadCategories {
-                    let cats = try await APIClient.shared.fetchCategories(locale: self.lang)
+                    let cats = try await APIClient.shared.fetchCategories(locale: self.lang, forceRefresh: forceRefresh)
                     // selectie stabiel houden
                     if let sel = self.selectedCategory,
                        cats.contains(where: { $0.id == sel.id }) == false {
@@ -79,7 +83,7 @@ final class ArticlesViewModel: ObservableObject {
                 }
 
                 let cid = self.selectedCategory?.id
-                let list = try await APIClient.shared.fetchArticles(locale: self.lang, categoryID: cid)
+                let list = try await APIClient.shared.fetchArticles(locale: self.lang, categoryID: cid, forceRefresh: forceRefresh)
                 self.articles = list
                 self.error = nil
             } catch is CancellationError {
@@ -103,3 +107,5 @@ final class ArticlesViewModel: ObservableObject {
 extension Notification.Name {
     static let appLanguageChanged = Notification.Name("appLanguageChanged")
 }
+
+

@@ -31,8 +31,19 @@ struct ArticlesView: View {
                 } else {
                     List {
                         // Categorieën
-                        if !vm.categories.isEmpty {
-                            Section(header: SectionHeader(title: NSLocalizedString("articles.categories", comment: ""))) {
+                        Section(header: SectionHeader(title: NSLocalizedString("articles.categories", comment: ""))) {
+                            if vm.categories.isEmpty {
+                                // placeholder terwijl categorieën nog laden (zorgt dat de sectie direct zichtbaar is)
+                                HStack {
+                                    ProgressView()
+                                        .controlSize(.small)
+                                    Text(NSLocalizedString("articles.category_picker", comment: ""))
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 4)
+                            } else {
                                 Picker(NSLocalizedString("articles.category_picker", comment: ""), selection: $vm.selectedCategory) {
                                     Text(NSLocalizedString("articles.all", comment: ""))
                                         .tag(nil as Category?)
@@ -41,6 +52,9 @@ struct ArticlesView: View {
                                     }
                                 }
                                 .pickerStyle(.navigationLink)
+                                .onChange(of: vm.selectedCategory) { _, _ in
+                                    Task { await vm.userRefresh() }
+                                }
                             }
                         }
 
@@ -61,7 +75,8 @@ struct ArticlesView: View {
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
                     .contentMargins(.vertical, UI.rowSpacing)
-                    .refreshable { await vm.load() }
+                    .animation(.default, value: vm.categories.count)
+                    .refreshable { await vm.userRefresh() }
                 }
             }
             // Grote custom titel zoals in HomeView
@@ -78,9 +93,7 @@ struct ArticlesView: View {
             }
         }
         .task { await vm.load() }
-        .task(id: selectedLanguage) { await vm.userRefresh() }
-        .task(id: vm.selectedCategory?.id) { await vm.userRefresh() }
-        .onAppear { vm.selectedCategory = vm.selectedCategory } // keep selection, ensure state
+        .task(id: selectedLanguage) { await vm.languageChangedRefresh() }
     }
 }
 

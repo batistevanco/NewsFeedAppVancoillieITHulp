@@ -76,7 +76,7 @@ struct HomeView: View {
                             .padding(.bottom, -4)
                             .background(Color(UIColor.systemBackground))
                         }
-                        .refreshable { await vm.load() }
+                        .refreshable { await vm.userRefresh() } // forceRefresh = true
                     }
                 }
             }
@@ -84,7 +84,7 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
         }
-        .task(id: selectedLanguage) { await vm.load() }
+        .task(id: selectedLanguage) { await vm.userRefresh() }
     }
 }
 

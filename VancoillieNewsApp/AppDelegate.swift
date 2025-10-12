@@ -8,7 +8,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         UNUserNotificationCenter.current().delegate = self
         NotificationManager.shared.requestIfNeeded { granted in
             if granted {
-                NotificationManager.shared.scheduleDaily(title: "", body: "", hour: 17, minute: 0)
+                NotificationManager.shared.scheduleDaily()
             }
         }
         return true

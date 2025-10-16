@@ -43,8 +43,14 @@ final class NotificationManager {
             }
 
             Task {
-                let content = await self.buildContentForToday()
                 let identifier = "news.daily.17"
+                // Bouw content; wanneer er geen nieuwe artikels zijn → nil
+                guard let content = await self.buildContentForToday() else {
+                    // Zorg dat er zeker niets ingepland blijft staan
+                    UNUserNotificationCenter.current()
+                        .removePendingNotificationRequests(withIdentifiers: [identifier])
+                    return
+                }
 
                 // voorkom dubbele requests met dezelfde id
                 UNUserNotificationCenter.current()
@@ -53,7 +59,6 @@ final class NotificationManager {
                 let trigger = UNCalendarNotificationTrigger(dateMatching: self.nextFivePM(), repeats: false)
                 let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
 
-                // iOS 17+ heeft async add; met try? om falen niet te crashen
                 try? await UNUserNotificationCenter.current().add(request)
             }
         }
@@ -108,7 +113,7 @@ final class NotificationManager {
 
     /// Bouwt de meldingstitel/body dynamisch op basis van het aantal nieuwe artikels sinds 17:00.
     /// Houdt rekening met de app-taal (UserDefaults "app.language") met fallback op systeem.
-    private func buildContentForToday() async -> UNMutableNotificationContent {
+    private func buildContentForToday() async -> UNNotificationContent? {
         // Bepaal taalcode
         let langPref = UserDefaults.standard.string(forKey: "app.language")
         let localeCode: String = {
@@ -124,6 +129,7 @@ final class NotificationManager {
         // Tel nieuwe artikels in het 17:00-venster
         let window = windowSinceLastFivePM()
         let count = articles.filter { $0.date >= window.start && $0.date <= window.end }.count
+        guard count > 0 else { return nil }
 
         let content = UNMutableNotificationContent()
 

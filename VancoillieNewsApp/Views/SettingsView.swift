@@ -55,8 +55,13 @@ struct SettingsView: View {
                     }
                 }
 
-                // MARK: - Build version
-                Section(footer: Text("Vancoillie IT Hulp")) {
+                // MARK: - About / Build version
+                Section(footer: Text("Made by Vancoillie Studio")) {
+                    HStack {
+                        Text("App name")
+                        Spacer()
+                        Text(appName)
+                    }
                     HStack {
                         Text(NSLocalizedString("settings.version", comment: ""))
                         Spacer()
@@ -162,6 +167,13 @@ struct SettingsView: View {
             return "\(version) (\(build))"
         }
         return version
+    }
+
+    private var appName: String {
+        if let display = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String, !display.isEmpty {
+            return display
+        }
+        return Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "—"
     }
 }
 

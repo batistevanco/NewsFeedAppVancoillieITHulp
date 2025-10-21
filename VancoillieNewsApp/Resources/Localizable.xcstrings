@@ -485,13 +485,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "If the toggle is active you will receive push notifications"
+            "value" : "If the toggle is active you will receive push notifications. You will receive one notification at 5pm if there are new articles."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Als de switch aan staat zal je meldingen ontvangen."
+            "value" : "Als de switch aan staat zal je meldingen ontvangen. U krijgt dan per dag 1 melding om 17h indien er nieuwe artikelen zijn."
           }
         }
       }

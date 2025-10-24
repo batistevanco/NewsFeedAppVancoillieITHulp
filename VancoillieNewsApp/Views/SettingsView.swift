@@ -70,9 +70,16 @@ struct SettingsView: View {
                 }
 
                 // MARK: - Support & Privacy
-                Section(header: Text(NSLocalizedString("settings.support", comment: ""))) {
+                Section(
+                    header: Text(NSLocalizedString("settings.support", comment: "")),
+                    footer: Text("support@vancoilliestudio.be")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 4)
+                ) {
                     Button {
-                        if let url = URL(string: "mailto:info@vancoillieithulp.be") {
+                        if let url = URL(string: "mailto:support@vancoilliestudio.be") {
                             UIApplication.shared.open(url)
                         }
                     } label: {

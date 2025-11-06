@@ -6,20 +6,77 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		595B93CF2EBCF765004BEDA2 /* AppleWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 595B93C52EBCF764004BEDA2 /* AppleWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		595B93CD2EBCF765004BEDA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5951C1962E998CE4000436B1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 595B93C42EBCF764004BEDA2;
+			remoteInfo = "AppleWatch Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		595B93D02EBCF765004BEDA2 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				595B93CF2EBCF765004BEDA2 /* AppleWatch Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		5951C19E2E998CE4000436B1 /* VancoillieNewsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VancoillieNewsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		595B93C52EBCF764004BEDA2 /* AppleWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AppleWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		595B93D52EBCF792004BEDA2 /* Exceptions for "VancoillieNewsApp" folder in "AppleWatch Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/LocaleHelper.swift,
+				Models/Article.swift,
+				Networking/APIClient.swift,
+				Networking/NetworkConfig.swift,
+			);
+			target = 595B93C42EBCF764004BEDA2 /* AppleWatch Watch App */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5951C1A02E998CE4000436B1 /* VancoillieNewsApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				595B93D52EBCF792004BEDA2 /* Exceptions for "VancoillieNewsApp" folder in "AppleWatch Watch App" target */,
+			);
 			path = VancoillieNewsApp;
+			sourceTree = "<group>";
+		};
+		595B93C62EBCF764004BEDA2 /* AppleWatch Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "AppleWatch Watch App";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		5951C19B2E998CE4000436B1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		595B93C22EBCF764004BEDA2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +90,7 @@
 			isa = PBXGroup;
 			children = (
 				5951C1A02E998CE4000436B1 /* VancoillieNewsApp */,
+				595B93C62EBCF764004BEDA2 /* AppleWatch Watch App */,
 				5951C19F2E998CE4000436B1 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +99,7 @@
 			isa = PBXGroup;
 			children = (
 				5951C19E2E998CE4000436B1 /* VancoillieNewsApp.app */,
+				595B93C52EBCF764004BEDA2 /* AppleWatch Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -55,10 +114,12 @@
 				5951C19A2E998CE4000436B1 /* Sources */,
 				5951C19B2E998CE4000436B1 /* Frameworks */,
 				5951C19C2E998CE4000436B1 /* Resources */,
+				595B93D02EBCF765004BEDA2 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				595B93CE2EBCF765004BEDA2 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				5951C1A02E998CE4000436B1 /* VancoillieNewsApp */,
@@ -68,6 +129,28 @@
 			);
 			productName = VancoillieNewsApp;
 			productReference = 5951C19E2E998CE4000436B1 /* VancoillieNewsApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		595B93C42EBCF764004BEDA2 /* AppleWatch Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 595B93D32EBCF765004BEDA2 /* Build configuration list for PBXNativeTarget "AppleWatch Watch App" */;
+			buildPhases = (
+				595B93C12EBCF764004BEDA2 /* Sources */,
+				595B93C22EBCF764004BEDA2 /* Frameworks */,
+				595B93C32EBCF764004BEDA2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				595B93C62EBCF764004BEDA2 /* AppleWatch Watch App */,
+			);
+			name = "AppleWatch Watch App";
+			packageProductDependencies = (
+			);
+			productName = "AppleWatch Watch App";
+			productReference = 595B93C52EBCF764004BEDA2 /* AppleWatch Watch App.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -81,6 +164,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					5951C19D2E998CE4000436B1 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					595B93C42EBCF764004BEDA2 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
@@ -101,12 +187,20 @@
 			projectRoot = "";
 			targets = (
 				5951C19D2E998CE4000436B1 /* VancoillieNewsApp */,
+				595B93C42EBCF764004BEDA2 /* AppleWatch Watch App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		5951C19C2E998CE4000436B1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		595B93C32EBCF764004BEDA2 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -123,7 +217,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		595B93C12EBCF764004BEDA2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		595B93CE2EBCF765004BEDA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 595B93C42EBCF764004BEDA2 /* AppleWatch Watch App */;
+			targetProxy = 595B93CD2EBCF765004BEDA2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		5951C1A72E998CE4000436B1 /* Debug */ = {
@@ -255,7 +364,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = K2F5H4NJCX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -270,7 +379,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = be.vancoilliestudio.VancoillieNewsApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -293,7 +402,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = K2F5H4NJCX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -308,7 +417,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = be.vancoilliestudio.VancoillieNewsApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -322,6 +431,72 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		595B93D12EBCF765004BEDA2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = K2F5H4NJCX;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = AppleWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = be.vancoilliestudio.VancoillieNewsApp;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = be.vancoilliestudio.VancoillieNewsApp.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.6;
+			};
+			name = Debug;
+		};
+		595B93D22EBCF765004BEDA2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = K2F5H4NJCX;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = AppleWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = be.vancoilliestudio.VancoillieNewsApp;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = be.vancoilliestudio.VancoillieNewsApp.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.6;
 			};
 			name = Release;
 		};
@@ -342,6 +517,15 @@
 			buildConfigurations = (
 				5951C1AA2E998CE4000436B1 /* Debug */,
 				5951C1AB2E998CE4000436B1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		595B93D32EBCF765004BEDA2 /* Build configuration list for PBXNativeTarget "AppleWatch Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				595B93D12EBCF765004BEDA2 /* Debug */,
+				595B93D22EBCF765004BEDA2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

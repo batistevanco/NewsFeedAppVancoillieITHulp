@@ -77,7 +77,10 @@ struct WatchOverviewView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .task {
                 if vm.articlesThisWeek.isEmpty && !vm.isLoading {
-                    await vm.load()
+                    await vm.load(forceRefresh: true)
+                } else {
+                    // zelfs als er al iets stond, kan je forceren:
+                    await vm.load(forceRefresh: true)
                 }
             }
             .background(Color.white.ignoresSafeArea())

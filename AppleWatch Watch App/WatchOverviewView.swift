@@ -27,16 +27,29 @@ struct WatchOverviewView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 14) {
                             // top header
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Vancoillie News")
-                                    .font(.system(size: 20, weight: .bold))
-                                    .foregroundColor(Color(red: 0.02, green: 0.4, blue: 1.0))
-                                Text("Deze week")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(Color.gray.opacity(0.8))
+                            HStack(alignment: .top) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Vancoillie News")
+                                        .font(.system(size: 20, weight: .bold))
+                                        .foregroundColor(Color(red: 0.02, green: 0.4, blue: 1.0))
+                                    Text("Deze week")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(Color.gray.opacity(0.8))
+                                }
+                                Spacer()
+                                Button {
+                                    Task {
+                                        await vm.load(forceRefresh: true)
+                                    }
+                                } label: {
+                                    Image(systemName: "arrow.clockwise")
+                                        .font(.caption)
+                                        .foregroundColor(.blue)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .padding(.top, 4)
                             .padding(.horizontal, 12)
+                            .padding(.top, 4)
 
                             ForEach(vm.articlesThisWeek) { article in
                                 NavigationLink {

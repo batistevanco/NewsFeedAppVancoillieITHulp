@@ -62,6 +62,21 @@ struct HomeView: View {
                                     }
                                 }
                             }
+                            
+                            Section {
+                                NavigationLink {
+                                    ArticlesView()
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Meer artikels bekijken")
+                                            .font(.headline)
+                                        Text("In de artikelen-navigatie vind je ook oudere nieuwsberichten.")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .padding(.vertical, 4)
+                                }
+                            }
                         }
                         .listStyle(.plain)
                         .scrollContentBackground(.hidden)

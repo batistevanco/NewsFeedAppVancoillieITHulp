@@ -72,6 +72,9 @@ struct WatchOverviewView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .topLeading)
                     }
+                    .refreshable {
+                        await vm.load(forceRefresh: true)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -80,6 +83,11 @@ struct WatchOverviewView: View {
                     await vm.load(forceRefresh: true)
                 } else {
                     // zelfs als er al iets stond, kan je forceren:
+                    await vm.load(forceRefresh: true)
+                }
+            }
+            .onAppear {
+                Task {
                     await vm.load(forceRefresh: true)
                 }
             }

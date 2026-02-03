@@ -209,13 +209,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Articles of this week"
+            "value" : "Articles of the last two weeks"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Artikelen van deze week"
+            "value" : "Artikelen van afgelopen twee weken"
           }
         }
       }

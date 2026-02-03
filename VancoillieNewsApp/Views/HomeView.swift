@@ -46,8 +46,8 @@ struct HomeView: View {
                                 }
                             }
 
-                            // Overige artikels (enkel deze week, zonder beschrijving)
-                            let cutoff = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+                            // Overige artikels (voorbije 2 weken, zonder beschrijving)
+                            let cutoff = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
                             let weekItems = vm.articles.dropFirst().filter { $0.date >= cutoff }
                             if !weekItems.isEmpty {
                                 Section(header: SectionHeader(title: NSLocalizedString("home.articles", comment: ""))) {

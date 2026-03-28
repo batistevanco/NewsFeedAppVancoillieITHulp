@@ -21,12 +21,12 @@ struct ArticleDetailView: View {
                     } placeholder: {
                         Rectangle().fill(.gray.opacity(0.15))
                     }
-                    .frame(maxWidth: .infinity, minHeight: 220)
+                    .frame(maxWidth: .infinity, minHeight: DeviceLayout.isPad ? 340 : 220)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
 
                 Text(article.title)
-                    .font(.title2).bold()
+                    .font(DeviceLayout.isPad ? .largeTitle.bold() : .title2.bold())
 
                 HStack(spacing: 8) {
                     CategoryBadge(name: article.categoryName)
@@ -41,20 +41,23 @@ struct ArticleDetailView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 
                 if let url = article.fullURL {
-                                    Button {
-                                        openURL(url)
-                                    } label: {
-                                        HStack {
-                                            Image(systemName: "safari")
-                                            Text(NSLocalizedString("article.read_full", comment: ""))
-                                        }
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .padding(.top, 8)
-                                }
+                    Button {
+                        openURL(url)
+                    } label: {
+                        HStack {
+                            Image(systemName: "safari")
+                            Text(NSLocalizedString("article.read_full", comment: ""))
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .padding(.top, 8)
+                }
             }
-            .padding()
+            .frame(maxWidth: DeviceLayout.isPad ? 860 : .infinity, alignment: .leading)
+            .padding(DeviceLayout.isPad ? 32 : 16)
+            .frame(maxWidth: .infinity)
         }
+        .background(Color(UIColor.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(article.title)
         .navigationBarTitleDisplayMode(.inline)
     }

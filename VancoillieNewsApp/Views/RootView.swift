@@ -15,10 +15,22 @@ struct RootView: View {
     
     var body: some View {
         TabView {
-            HomeView()
+            Group {
+                if DeviceLayout.isPad {
+                    IPadHomeView()
+                } else {
+                    HomeView()
+                }
+            }
                 .tabItem { Label(NSLocalizedString("tab.home", comment: ""), systemImage: "house") }
 
-            ArticlesView()
+            Group {
+                if DeviceLayout.isPad {
+                    IPadArticlesView()
+                } else {
+                    ArticlesView()
+                }
+            }
                 .tabItem { Label(NSLocalizedString("tab.articles", comment: ""), systemImage: "newspaper") }
 
             SettingsView()

@@ -74,10 +74,22 @@ struct IPadArticlesView: View {
                 description: Text(error.localizedDescription)
             )
         } else {
-            List(vm.articles) { article in
-                articleButton(for: article)
+            List {
+                Section {
+                    filterBar
+                }
+                .listRowInsets(EdgeInsets(top: 14, leading: 20, bottom: 8, trailing: 20))
+                .listRowBackground(Color.clear)
+
+                Section(NSLocalizedString("articles.list", comment: "")) {
+                    ForEach(vm.articles) { article in
+                        articleButton(for: article)
+                    }
+                }
             }
             .navigationTitle(NSLocalizedString("articles.title", comment: ""))
+            .scrollContentBackground(.hidden)
+            .background(Color(UIColor.systemGroupedBackground))
             .refreshable { await vm.userRefresh() }
         }
     }
@@ -134,5 +146,55 @@ struct IPadArticlesView: View {
         selectedArticleID = nil
         vm.selectedCategory = nil
         Task { await vm.userRefresh() }
+    }
+
+    private var filterBar: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(NSLocalizedString("articles.category_picker", comment: ""), systemImage: "line.3.horizontal.decrease.circle.fill")
+                .font(.headline)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    filterChip(
+                        title: NSLocalizedString("articles.all", comment: ""),
+                        isSelected: vm.selectedCategory == nil,
+                        action: showAllCategories
+                    )
+
+                    ForEach(vm.categories) { category in
+                        filterChip(
+                            title: category.name,
+                            isSelected: vm.selectedCategory?.id == category.id
+                        ) {
+                            selectedArticleID = nil
+                            vm.selectedCategory = category
+                            Task { await vm.userRefresh() }
+                        }
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+    }
+
+    private func filterChip(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                }
+                Text(title)
+                    .lineLimit(1)
+            }
+            .font(.subheadline.weight(.semibold))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                isSelected ? Color.accentColor : Color(UIColor.secondarySystemBackground),
+                in: Capsule()
+            )
+            .foregroundStyle(isSelected ? Color.white : Color.primary)
+        }
+        .buttonStyle(.plain)
     }
 }

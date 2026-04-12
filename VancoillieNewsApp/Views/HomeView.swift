@@ -36,12 +36,12 @@ struct HomeView: View {
                             // Hero
                             if let hero = vm.articles.first {
                                 Section(header: SectionHeader(title: NSLocalizedString("home.just_in", comment: ""))) {
-                                    NavigationLink {
-                                        ArticleDetailView(article: hero)
-                                    } label: {
-                                        HeroCardModern(article: hero)
-                                    }
-                                    .listRowInsets(EdgeInsets())
+                                NavigationLink {
+                                    ArticleDetailView(article: hero)
+                                } label: {
+                                    HeroCardModern(article: hero)
+                                }
+                                    .listRowInsets(EdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12))
                                     .listRowBackground(Color.clear)
                                 }
                             }
@@ -122,10 +122,16 @@ private struct SectionHeader: View {
 
 private struct HeroCardModern: View {
     let article: Article
+
+    private var heroHeight: CGFloat {
+        DeviceLayout.isPad ? 280 : 190
+    }
+
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             ArticleImageView(url: article.imageURL)
-                .frame(height: 220)
+                .frame(maxWidth: .infinity)
+                .frame(height: heroHeight)
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
             // Gradient overlay for readable text
@@ -138,15 +144,19 @@ private struct HeroCardModern: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(.ultraThinMaterial, in: Capsule())
+
                 Text(article.title)
                     .font(.title2.weight(.semibold))
                     .foregroundStyle(.white)
                     .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
                     .shadow(color: .black.opacity(0.9), radius: 10, y: 3)
             }
             .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
     }
 }

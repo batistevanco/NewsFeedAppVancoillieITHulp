@@ -12,16 +12,19 @@ import UserNotifications
 struct RootView: View {
     @AppStorage("notif.prompted") private var notifPrompted = false
     @AppStorage("notifications.enabled") private var notificationsEnabled = false
-    
+    @AppStorage("onboarding.completed") private var onboardingCompleted = false
+    @State private var selectedTab = 0
+
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             Group {
                 if DeviceLayout.isPad {
-                    IPadHomeView()
+                    IPadHomeView(selectedTab: $selectedTab)
                 } else {
-                    HomeView()
+                    HomeView(selectedTab: $selectedTab)
                 }
             }
+                .tag(0)
                 .tabItem { Label(NSLocalizedString("tab.home", comment: ""), systemImage: "house") }
 
             Group {
@@ -31,14 +34,22 @@ struct RootView: View {
                     ArticlesView()
                 }
             }
+                .tag(1)
                 .tabItem { Label(NSLocalizedString("tab.articles", comment: ""), systemImage: "newspaper") }
 
             SettingsView()
+                .tag(2)
                 .tabItem { Label(NSLocalizedString("tab.settings", comment: ""), systemImage: "gearshape") }
         }
         .tint(Brand.blue)
-        
-        // ▼ NIEUW: vraag OS-prompt direct bij eerste run (of als nooit gevraagd)
+        .fullScreenCover(isPresented: Binding(
+            get: { !onboardingCompleted },
+            set: { if !$0 { onboardingCompleted = true } }
+        )) {
+            OnboardingView()
+        }
+
+        // ▼ vraag OS-prompt direct bij eerste run (of als nooit gevraagd)
                 .task {
                     // Vraag alleen als nog nooit gevraagd én status nog onbekend
                     let settings = await UNUserNotificationCenter.current().notificationSettings()

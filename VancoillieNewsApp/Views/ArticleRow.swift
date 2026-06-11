@@ -4,26 +4,46 @@ struct ArticleRow: View {
     let article: Article
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             ArticleImageView(url: article.imageURL)
-                .frame(width: 92, height: 68)
-                .cornerRadius(8)
+                .frame(width: 100, height: 78)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(article.title)
-                    .font(.headline)
-                    .lineLimit(2)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                HStack(spacing: 8) {
-                    CategoryBadge(name: article.categoryName)
+                HStack(spacing: 6) {
+                    Text(article.categoryName)
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Brand.categoryColor(for: article.categoryName).opacity(0.12), in: Capsule())
+                        .foregroundStyle(Brand.categoryColor(for: article.categoryName))
+                        .lineLimit(1)
+
                     Text(article.date, style: .date)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+
+                    Spacer(minLength: 0)
+
+                    HStack(spacing: 3) {
+                        Image(systemName: "clock").font(.caption2)
+                        Text(article.readTimeLabel).font(.caption2)
+                    }
+                    .foregroundStyle(.secondary)
                 }
-                .lineLimit(1)
             }
-            Spacer()
         }
-        .contentShape(Rectangle())
+        .padding(12)
+        .background(Color(UIColor.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.04))
+        }
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }

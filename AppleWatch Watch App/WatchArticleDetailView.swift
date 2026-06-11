@@ -1,11 +1,3 @@
-//
-//  WatchArticleDetailView.swift
-//  VancoillieNewsApp
-//
-//  Created by Batiste Vancoillie on 06/11/2025.
-//
-
-
 import SwiftUI
 
 struct WatchArticleDetailView: View {
@@ -14,49 +6,56 @@ struct WatchArticleDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
+                // Categorie badge
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(watchCategoryColor(article.categoryName))
+                        .frame(width: 7, height: 7)
+                    Text(article.categoryName)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(watchCategoryColor(article.categoryName))
+                }
 
+                // Titel
                 Text(article.title)
-                    .font(.headline)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.primary)
 
-                Text(article.categoryName)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                // Datum + leestijd
+                HStack(spacing: 8) {
+                    Text(article.date, style: .date)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
 
-                // als je artikel een datum heeft die mooi is:
-                if let formattedDate = formatDate(article.date) {
-                    Text(formattedDate)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 3) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 10))
+                        Text(article.readTimeLabel)
+                            .font(.system(size: 11))
+                    }
+                    .foregroundStyle(.secondary)
                 }
 
                 Divider()
-                    .background(Color.white.opacity(0.2))
 
-                // beschrijving / body
+                // Body
                 Text(article.description)
-                    .font(.caption)
-                    .foregroundColor(.white)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.primary)
                     .multilineTextAlignment(.leading)
 
-                // als je API een fullURL meegeeft
+                // Lees volledig
                 if let url = article.fullURL {
-                    Link("Lees volledig", destination: url)
-                        .font(.caption2)
-                        .padding(.top, 6)
+                    Link(destination: url) {
+                        Label("Lees volledig", systemImage: "safari")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .padding(.top, 4)
                 }
             }
-            .padding(.vertical, 6)
+            .padding(.vertical, 4)
         }
-        .containerBackground(Color(red: 0.1, green: 0.12, blue: 0.15), for: .navigation)
-        .navigationTitle("Artikel")
-    }
-
-    private func formatDate(_ date: Date) -> String? {
-        let f = DateFormatter()
-        f.dateStyle = .medium
-        f.timeStyle = .none
-        return f.string(from: date)
+        .navigationTitle(article.categoryName)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

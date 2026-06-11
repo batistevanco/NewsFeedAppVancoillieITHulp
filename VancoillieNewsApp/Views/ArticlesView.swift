@@ -1,13 +1,8 @@
 import SwiftUI
 
-private enum UI {
-    static let corner: CGFloat = 14
-    static let rowSpacing: CGFloat = 8
-}
-
 struct ArticlesView: View {
     @AppStorage("pref.lang") private var selectedLanguage: String = "nl"
-    @StateObject private var vm = ArticlesViewModel()  
+    @StateObject private var vm = ArticlesViewModel()
 
     private var navTitle: String {
         let t = NSLocalizedString("articles.title", comment: "")
@@ -20,8 +15,7 @@ struct ArticlesView: View {
                 Color(UIColor.systemBackground).ignoresSafeArea()
 
                 if vm.isLoading && vm.articles.isEmpty {
-                    ProgressView()
-                        .scaleEffect(2)
+                    ProgressView().controlSize(.large)
                 } else if let error = vm.error, vm.articles.isEmpty {
                     ContentUnavailableView(
                         "Kan niet laden",
@@ -29,65 +23,85 @@ struct ArticlesView: View {
                         description: Text(error.localizedDescription)
                     )
                 } else {
-                    List {
-                        // Categorieën
-                        Section(header: SectionHeader(title: NSLocalizedString("articles.categories", comment: ""))) {
-                            if vm.categories.isEmpty {
-                                // placeholder terwijl categorieën nog laden (zorgt dat de sectie direct zichtbaar is)
-                                HStack {
-                                    ProgressView()
-                                        .controlSize(.small)
-                                    Text(NSLocalizedString("articles.category_picker", comment: ""))
-                                        .font(.footnote)
-                                        .foregroundStyle(.secondary)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.vertical, 4)
-                            } else {
-                                Picker(NSLocalizedString("articles.category_picker", comment: ""), selection: $vm.selectedCategory) {
-                                    Text(NSLocalizedString("articles.all", comment: ""))
-                                        .tag(nil as Category?)
-                                    ForEach(vm.categories) { c in
-                                        Text(c.name).tag(c as Category?)
-                                    }
-                                }
-                                .pickerStyle(.navigationLink)
-                                .onChange(of: vm.selectedCategory) { _, _ in
-                                    Task { await vm.userRefresh() }
-                                }
-                            }
-                        }
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            // Artikel-teller
+                            Text(vm.articles.isEmpty ? "Geen artikels" : "\(vm.articles.count) artikels")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 16)
+                                .padding(.top, 4)
+                                .padding(.bottom, 14)
 
-                        // Artikellijst
-                        Section(header: SectionHeader(title: NSLocalizedString("articles.list", comment: ""))) {
-                            ForEach(vm.articles) { a in
+                            // Artikel-rijen
+                            ForEach(vm.articles) { article in
                                 NavigationLink {
-                                    ArticleDetailView(article: a)
+                                    ArticleDetailView(article: article)
                                 } label: {
-                                    ArticleRowModern(article: a)
+                                    ArticleCard(article: article)
                                 }
                                 .buttonStyle(.plain)
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(Color.clear)
+                                .padding(.horizontal, 16)
+                                .padding(.bottom, 12)
                             }
+
+                            Spacer().frame(height: 16)
                         }
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .contentMargins(.vertical, UI.rowSpacing)
-                    .animation(.default, value: vm.categories.count)
                     .refreshable { await vm.userRefresh() }
+                    .animation(.default, value: vm.articles.count)
                 }
             }
-            // Grote custom titel zoals in HomeView
             .safeAreaInset(edge: .top) {
-                HStack { // left aligned
+                VStack(alignment: .leading, spacing: 12) {
                     Text(navTitle)
                         .font(.largeTitle.weight(.bold))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-                        .padding(.top, 25)
-                        .padding(.bottom, -4)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 24)
+
+                    // Categorie-chips
+                    if !vm.categories.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                CategoryChip(
+                                    name: NSLocalizedString("articles.all", comment: "").isEmpty ? "Alles" : NSLocalizedString("articles.all", comment: ""),
+                                    isSelected: vm.selectedCategory == nil,
+                                    color: Brand.blue
+                                ) {
+                                    if vm.selectedCategory != nil {
+                                        vm.selectedCategory = nil
+                                        Task { await vm.userRefresh() }
+                                    }
+                                }
+                                ForEach(vm.categories) { cat in
+                                    CategoryChip(
+                                        name: cat.name,
+                                        isSelected: vm.selectedCategory?.id == cat.id,
+                                        color: Brand.categoryColor(for: cat.name)
+                                    ) {
+                                        if vm.selectedCategory?.id != cat.id {
+                                            vm.selectedCategory = cat
+                                            Task { await vm.userRefresh() }
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 2)
+                        }
+                    } else if vm.isLoading {
+                        HStack(spacing: 8) {
+                            ForEach(0..<4, id: \.self) { _ in
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .fill(Color(UIColor.secondarySystemBackground))
+                                    .frame(width: 72, height: 34)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .redacted(reason: .placeholder)
+                    }
+
+                    Divider().padding(.horizontal, 16)
                 }
                 .background(Color(UIColor.systemBackground))
             }
@@ -97,73 +111,78 @@ struct ArticlesView: View {
     }
 }
 
-// MARK: - Components (matching HomeView)
+// MARK: - CategoryChip
 
-private struct SectionHeader: View {
-    let title: String
+private struct CategoryChip: View {
+    let name: String
+    let isSelected: Bool
+    let color: Color
+    let onTap: () -> Void
+
     var body: some View {
-        HStack(spacing: 8) {
-            Circle().fill(Color.blue.opacity(0.7)).frame(width: 8, height: 8)
-            Text(title.uppercased())
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .tracking(0.6)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 4)
-                .background(.thinMaterial, in: Capsule())
+        Button(action: onTap) {
+            Text(name)
+                .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(
+                    isSelected ? color : Color(UIColor.secondarySystemBackground),
+                    in: Capsule()
+                )
+                .foregroundStyle(isSelected ? .white : .primary)
         }
-        .padding(.horizontal)
-        .padding(.top, 4)
+        .buttonStyle(.plain)
+        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isSelected)
     }
 }
 
-private struct ArticleRowModern: View {
-    let article: Article
-    var body: some View {
-        HStack(spacing: 12) {
-            ArticleImageView(url: article.imageURL)
-                .frame(width: 92, height: 68)
-                .clipShape(RoundedRectangle(cornerRadius: UI.corner, style: .continuous))
+// MARK: - ArticleCard
 
-            VStack(alignment: .leading, spacing: 2) {
+private struct ArticleCard: View {
+    let article: Article
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ArticleImageView(url: article.imageURL)
+                .frame(width: 100, height: 78)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 6) {
                 Text(article.title)
-                    .font(.headline)
-                    .lineLimit(2)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+
                 HStack(spacing: 6) {
                     Text(article.categoryName)
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            article.categoryName == "Vancoillie IT Hulp"
-                                ? Color.blue.opacity(0.15)
-                                : Color.red.opacity(0.15),
-                            in: Capsule()
-                        )
-                        .foregroundColor(
-                            article.categoryName == "Vancoillie IT Hulp"
-                                ? .blue
-                                : .gray
-                        )
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Brand.categoryColor(for: article.categoryName).opacity(0.12), in: Capsule())
+                        .foregroundStyle(Brand.categoryColor(for: article.categoryName))
                         .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
-                        .minimumScaleFactor(0.9)
-                        .layoutPriority(1)
+
                     Text(article.date, style: .date)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+
+                    Spacer(minLength: 0)
+
+                    HStack(spacing: 3) {
+                        Image(systemName: "clock")
+                            .font(.caption2)
+                        Text(article.readTimeLabel)
+                            .font(.caption2)
+                    }
+                    .foregroundStyle(.secondary)
                 }
             }
-            Spacer(minLength: 0)
         }
-        .padding(8)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: UI.corner, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: UI.corner, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.15))
-        )
-        .shadow(color: .black.opacity(0.03), radius: 2, y: 1)
-        .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.horizontal, 4)
+        .padding(12)
+        .background(Color(UIColor.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.04))
+        }
     }
 }

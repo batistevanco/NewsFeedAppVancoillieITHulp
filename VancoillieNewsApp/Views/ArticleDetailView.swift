@@ -105,9 +105,20 @@ struct ArticleDetailView: View {
                             Text(article.date, style: .date)
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
+
+                            HStack(spacing: 4) {
+                                Image(systemName: "clock")
+                                    .font(.caption2)
+                                Text(article.readTimeLabel)
+                                    .font(.caption.weight(.semibold))
+                            }
+                            .foregroundStyle(.secondary)
                         }
                     }
                     .padding(.top, DeviceLayout.isPad ? 4 : 0)
+
+                    WatJeMoetweten(article: article)
+                        .frame(width: readableWidth)
 
                     VStack(alignment: .leading, spacing: DeviceLayout.isPad ? 22 : 18) {
                         if let leadSentence {
@@ -171,5 +182,64 @@ struct ArticleDetailView: View {
         .background(Color(UIColor.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(article.title)
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - Wat je moet weten
+
+private struct WatJeMoetweten: View {
+    let article: Article
+
+    private var bullets: [String] {
+        let trimmed = article.description.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        var sentences: [String] = []
+        var current = ""
+        for char in trimmed {
+            current.append(char)
+            if ".!?".contains(char) {
+                let s = current.trimmingCharacters(in: .whitespacesAndNewlines)
+                if s.count > 20 { sentences.append(s) }
+                current = ""
+                if sentences.count >= 3 { break }
+            }
+        }
+        return sentences
+    }
+
+    var body: some View {
+        let items = bullets
+        if !items.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 6) {
+                    Image(systemName: "lightbulb.fill")
+                        .foregroundStyle(.yellow)
+                        .font(.subheadline)
+                    Text("Wat je moet weten")
+                        .font(.subheadline.weight(.semibold))
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(Array(items.enumerated()), id: \.0) { _, bullet in
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(Brand.categoryColor(for: article.categoryName))
+                                .font(.caption)
+                                .padding(.top, 3)
+                            Text(bullet)
+                                .font(.subheadline)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.06))
+            }
+        }
     }
 }

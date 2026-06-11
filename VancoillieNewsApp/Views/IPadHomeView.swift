@@ -1,17 +1,41 @@
 import SwiftUI
 
 struct IPadHomeView: View {
+    @Binding var selectedTab: Int
     @StateObject private var vm = ArticlesViewModel()
     @AppStorage("pref.lang") private var selectedLanguage: String = "nl"
+    @AppStorage("pref.categories") private var savedCategories: String = ""
+    @AppStorage("user.firstname") private var firstName: String = ""
+
+    private let homeArticleLimit = 6
 
     private var navTitle: String {
         let title = NSLocalizedString("home.title", comment: "")
         return title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "News" : title
     }
 
+    private var preferredCategoryIDs: Set<Int> {
+        Set(savedCategories.split(separator: ",").compactMap { Int($0) })
+    }
+
+    private var displayArticles: [Article] {
+        let ids = preferredCategoryIDs
+        guard !ids.isEmpty else { return vm.articles }
+        let filtered = vm.articles.filter { ids.contains($0.categoryID) }
+        return filtered.isEmpty ? vm.articles : filtered
+    }
+
     private var recentArticles: [Article] {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
-        return vm.articles.dropFirst().filter { $0.date >= cutoff }
+        Array(displayArticles.dropFirst().prefix(homeArticleLimit))
+    }
+
+    private var greeting: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12: return "Goedemorgen"
+        case 12..<18: return "Goedemiddag"
+        default:     return "Goedenavond"
+        }
     }
 
     var body: some View {
@@ -43,7 +67,23 @@ struct IPadHomeView: View {
 
                         ScrollView {
                             VStack(alignment: .leading, spacing: 28) {
-                                if let hero = vm.articles.first {
+                                // Greeting + brief card
+                                VStack(alignment: .leading, spacing: 16) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(firstName.isEmpty ? greeting : "\(greeting) \(firstName)")
+                                            .font(.system(size: 32, weight: .bold))
+                                        Text("\(displayArticles.count) artikels beschikbaar")
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                    }
+
+                                    let briefArticles = Array(vm.articles.prefix(4))
+                                    if !briefArticles.isEmpty {
+                                        IPadTodayBriefCard(articles: briefArticles)
+                                    }
+                                }
+
+                                if let hero = displayArticles.first {
                                     NavigationLink {
                                         ArticleDetailView(article: hero)
                                     } label: {
@@ -54,7 +94,7 @@ struct IPadHomeView: View {
 
                                 if !recentArticles.isEmpty {
                                     VStack(alignment: .leading, spacing: 16) {
-                                        Text(NSLocalizedString("home.articles", comment: ""))
+                                        Text("Laatste nieuws")
                                             .font(.title2.weight(.bold))
 
                                         LazyVGrid(columns: gridColumns, spacing: 20) {
@@ -67,6 +107,28 @@ struct IPadHomeView: View {
                                                 .buttonStyle(.plain)
                                             }
                                         }
+
+                                        Button {
+                                            selectedTab = 1
+                                        } label: {
+                                            HStack {
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    Text("Meer artikels bekijken")
+                                                        .font(.headline)
+                                                    Text("Inclusief oudere nieuwsberichten")
+                                                        .font(.subheadline)
+                                                        .foregroundStyle(.secondary)
+                                                }
+                                                Spacer()
+                                                Image(systemName: "chevron.right")
+                                                    .foregroundStyle(.secondary)
+                                                    .font(.subheadline.weight(.semibold))
+                                            }
+                                            .padding(20)
+                                            .background(Color(UIColor.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                            .foregroundStyle(.primary)
+                                        }
+                                        .buttonStyle(.plain)
                                     }
                                 }
                             }
@@ -83,6 +145,50 @@ struct IPadHomeView: View {
             .navigationBarTitleDisplayMode(.large)
         }
         .task(id: selectedLanguage) { await vm.userRefresh() }
+    }
+}
+
+private struct IPadTodayBriefCard: View {
+    let articles: [Article]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "pin.fill")
+                    .foregroundStyle(.orange)
+                Text("Vandaag in het kort")
+                    .font(.subheadline.weight(.semibold))
+            }
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 4) {
+                ForEach(articles) { article in
+                    NavigationLink {
+                        ArticleDetailView(article: article)
+                    } label: {
+                        HStack(alignment: .top, spacing: 8) {
+                            Circle()
+                                .fill(Brand.categoryColor(for: article.categoryName))
+                                .frame(width: 6, height: 6)
+                                .padding(.top, 5)
+                            Text(article.title)
+                                .font(.subheadline)
+                                .lineLimit(2)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .foregroundStyle(.primary)
+                        }
+                        .padding(.vertical, 6)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.06))
+        }
     }
 }
 
@@ -147,6 +253,12 @@ private struct IPadArticleCard: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+
+                    HStack(spacing: 3) {
+                        Image(systemName: "clock").font(.caption2)
+                        Text(article.readTimeLabel).font(.caption)
+                    }
+                    .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 

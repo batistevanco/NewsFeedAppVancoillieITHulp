@@ -1,5 +1,18 @@
 import Foundation
+import SwiftUI
 internal import Combine
+
+func watchCategoryColor(_ name: String) -> Color {
+    let lower = name.lowercased()
+    if lower.contains("vancoillie")                          { return .blue }
+    if lower.contains("tech") || lower.contains("technolog") { return .blue }
+    if lower.contains("sport")                               { return .green }
+    if lower.contains("financ") || lower.contains("econom") { return .yellow }
+    if lower.contains(" ai") || lower.contains("artifici")  { return .purple }
+    if lower.contains("belgi")                               { return .red }
+    if lower.contains("gaming") || lower.contains("game")   { return .indigo }
+    return .gray
+}
 
 @MainActor
 final class WatchArticlesViewModel: ObservableObject {

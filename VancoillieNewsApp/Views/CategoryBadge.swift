@@ -1,40 +1,19 @@
-//
-//  CategoryBadge.swift
-//  VancoillieNewsApp
-//
-//  Created by Batiste Vancoillie on 11/10/2025.
-//
-
-
 import SwiftUI
 
 struct CategoryBadge: View {
     let name: String
 
-    private var isBrand: Bool {
-        name == "Vancoillie IT Hulp"
+    private var color: Color { Brand.categoryColor(for: name) }
+    private var displayName: String {
+        name == "Vancoillie IT Hulp" ? NSLocalizedString("badge.vancoillie", comment: "") : name
     }
 
     var body: some View {
-        Group {
-            if isBrand {
-                Text(NSLocalizedString("badge.vancoillie", comment: ""))
-                    .font(.caption2).bold()
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.accentColor))
-                    .foregroundStyle(.white)
-            } else {
-                HStack(spacing: 4) {
-                    Image(systemName: "tag")
-                    Text(name)
-                }
-                .font(.caption2)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Capsule().fill(Color.secondary.opacity(0.15)))
-                .foregroundStyle(.secondary)
-            }
-        }
+        Text(displayName)
+            .font(.caption2.weight(.semibold))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(color.opacity(0.15), in: Capsule())
+            .foregroundStyle(color)
     }
 }

@@ -6,105 +6,81 @@ struct WatchOverviewView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if vm.isLoading {
+                if vm.isLoading && vm.articlesThisWeek.isEmpty {
                     ProgressView("Laden…")
-                } else if let msg = vm.errorMessage {
-                    VStack(spacing: 8) {
-                        Text("Kon artikels niet laden")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let msg = vm.errorMessage, vm.articlesThisWeek.isEmpty {
+                    VStack(spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.title2)
+                            .foregroundStyle(.yellow)
+                        Text("Kon niet laden")
                             .font(.headline)
-                        Text(msg)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
                         Button("Opnieuw") {
-                            Task { await vm.load() }
+                            Task { await vm.load(forceRefresh: true) }
                         }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.blue)
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if vm.articlesThisWeek.isEmpty {
-                    Text("Geen artikels deze week")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    VStack(spacing: 8) {
+                        Image(systemName: "newspaper")
+                            .font(.title2)
+                            .foregroundStyle(.secondary)
+                        Text("Geen artikels\ndeze week")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 14) {
-                            // top header
-                            HStack(alignment: .top) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Vancoillie News")
-                                        .font(.system(size: 20, weight: .bold))
-                                        .foregroundColor(Color(red: 0.02, green: 0.4, blue: 1.0))
-                                    Text("Deze week")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(Color.gray.opacity(0.8))
-                                }
-                                Spacer()
-                                Button {
-                                    Task {
-                                        await vm.load(forceRefresh: true)
-                                    }
-                                } label: {
-                                    Image(systemName: "arrow.clockwise")
-                                        .font(.caption)
-                                        .foregroundColor(.blue)
-                                }
-                                .buttonStyle(.plain)
+                    List {
+                        ForEach(vm.articlesThisWeek) { article in
+                            NavigationLink {
+                                WatchArticleDetailView(article: article)
+                            } label: {
+                                WatchArticleRow(article: article)
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.top, 4)
-
-                            ForEach(vm.articlesThisWeek) { article in
-                                NavigationLink {
-                                    WatchArticleDetailView(article: article)
-                                } label: {
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: 6) {
-                                            Text(article.title)
-                                                .font(.headline)
-                                                .foregroundColor(.black)
-                                                .multilineTextAlignment(.leading)
-                                                .lineLimit(3) // laat tot 3 regels toe
-                                                .minimumScaleFactor(0.8) // tekst krimpt lichtjes als het net niet past
-                                            Text(article.categoryName)
-                                                .font(.caption2)
-                                                .foregroundColor(Color.gray.opacity(0.7))
-                                        }
-                                        Spacer()
-                                        Image(systemName: "chevron.right")
-                                            .font(.caption2)
-                                            .foregroundColor(.gray)
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding()
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                            .fill(Color(red: 0.96, green: 0.97, blue: 1.0))
-                                    )
-                                }
-                                .padding(.horizontal, 12)
-                            }
-                            .padding(.bottom, 4)
                         }
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
                     }
                     .refreshable {
                         await vm.load(forceRefresh: true)
                     }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .task {
-                if vm.articlesThisWeek.isEmpty && !vm.isLoading {
-                    await vm.load(forceRefresh: true)
-                } else {
-                    // zelfs als er al iets stond, kan je forceren:
-                    await vm.load(forceRefresh: true)
-                }
-            }
-            .onAppear {
-                Task {
-                    await vm.load(forceRefresh: true)
-                }
-            }
-            .background(Color.white.ignoresSafeArea())
+            .navigationTitle("Nieuws")
         }
+        .task {
+            await vm.load(forceRefresh: true)
+        }
+    }
+}
+
+private struct WatchArticleRow: View {
+    let article: Article
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(watchCategoryColor(article.categoryName))
+                    .frame(width: 7, height: 7)
+                Text(article.categoryName)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(watchCategoryColor(article.categoryName))
+                    .lineLimit(1)
+            }
+
+            Text(article.title)
+                .font(.system(size: 14, weight: .semibold))
+                .lineLimit(3)
+                .foregroundStyle(.primary)
+
+            Text(article.date, style: .relative)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
     }
 }

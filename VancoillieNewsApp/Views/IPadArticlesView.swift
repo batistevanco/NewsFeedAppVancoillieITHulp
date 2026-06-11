@@ -9,6 +9,12 @@ struct IPadArticlesView: View {
         vm.articles.first(where: { $0.id == selectedArticleID })
     }
 
+    private var contentTitle: String {
+        if let cat = vm.selectedCategory { return cat.name }
+        let loc = NSLocalizedString("articles.all", comment: "")
+        return loc.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Alle artikels" : loc
+    }
+
     var body: some View {
         NavigationSplitView {
             sidebar
@@ -31,35 +37,67 @@ struct IPadArticlesView: View {
         }
     }
 
-    private func selectFirstArticleIfNeeded() {
-        if selectedArticleID == nil {
-            selectedArticleID = vm.articles.first?.id
-        }
-    }
-
-    private func syncSelectionAfterReload() {
-        if let selectedArticleID, vm.articles.contains(where: { $0.id == selectedArticleID }) {
-            return
-        }
-        self.selectedArticleID = vm.articles.first?.id
-    }
+    // MARK: - Sidebar
 
     private var sidebar: some View {
         List {
-            Section(NSLocalizedString("articles.categories", comment: "")) {
-                Button(action: showAllCategories) {
-                    Label(NSLocalizedString("articles.all", comment: ""), systemImage: "square.grid.2x2")
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .tint(vm.selectedCategory == nil ? .accentColor : .primary)
+            // Alles
+            sidebarRow(
+                name: NSLocalizedString("articles.all", comment: "").isEmpty ? "Alle artikels" : NSLocalizedString("articles.all", comment: ""),
+                color: Brand.blue,
+                isSelected: vm.selectedCategory == nil,
+                action: showAllCategories
+            )
 
-                ForEach(vm.categories) { category in
-                    categoryButton(for: category)
+            if !vm.categories.isEmpty {
+                Section("Categorieën") {
+                    ForEach(vm.categories) { cat in
+                        sidebarRow(
+                            name: cat.name,
+                            color: Brand.categoryColor(for: cat.name),
+                            isSelected: vm.selectedCategory?.id == cat.id
+                        ) {
+                            selectedArticleID = nil
+                            vm.selectedCategory = cat
+                            Task { await vm.userRefresh() }
+                        }
+                    }
                 }
             }
         }
-        .navigationTitle(NSLocalizedString("articles.categories", comment: ""))
+        .listStyle(.sidebar)
+        .navigationTitle(NSLocalizedString("articles.title", comment: "").isEmpty ? "Artikelen" : NSLocalizedString("articles.title", comment: ""))
     }
+
+    private func sidebarRow(name: String, color: Color, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(color.opacity(0.18))
+                    .frame(width: 28, height: 28)
+                    .overlay {
+                        Circle()
+                            .fill(color)
+                            .frame(width: 9, height: 9)
+                    }
+
+                Text(name)
+                    .font(.body.weight(isSelected ? .semibold : .regular))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .listRowBackground(
+            isSelected
+                ? color.opacity(0.10)
+                : Color.clear
+        )
+    }
+
+    // MARK: - Content column
 
     @ViewBuilder
     private var contentColumn: some View {
@@ -73,26 +111,51 @@ struct IPadArticlesView: View {
                 systemImage: "exclamationmark.triangle",
                 description: Text(error.localizedDescription)
             )
+        } else if vm.articles.isEmpty {
+            ContentUnavailableView(
+                "Geen artikels",
+                systemImage: "doc.text",
+                description: Text("Er zijn geen artikels in deze categorie.")
+            )
         } else {
-            List {
-                Section {
-                    filterBar
-                }
-                .listRowInsets(EdgeInsets(top: 14, leading: 20, bottom: 8, trailing: 20))
-                .listRowBackground(Color.clear)
+            ScrollView {
+                LazyVStack(spacing: 10) {
+                    // Teller
+                    Text("\(vm.articles.count) artikels")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        .padding(.bottom, 4)
 
-                Section(NSLocalizedString("articles.list", comment: "")) {
                     ForEach(vm.articles) { article in
-                        articleButton(for: article)
+                        Button {
+                            selectedArticleID = article.id
+                        } label: {
+                            ArticleRow(article: article)
+                                .overlay {
+                                    if article.id == selectedArticleID {
+                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                            .strokeBorder(Brand.blue.opacity(0.5), lineWidth: 2)
+                                    }
+                                }
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 12)
                     }
+
+                    Spacer().frame(height: 16)
                 }
             }
-            .navigationTitle(NSLocalizedString("articles.title", comment: ""))
-            .scrollContentBackground(.hidden)
             .background(Color(UIColor.systemGroupedBackground))
             .refreshable { await vm.userRefresh() }
+            .navigationTitle(contentTitle)
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
+
+    // MARK: - Detail column
 
     @ViewBuilder
     private var detailColumn: some View {
@@ -102,99 +165,31 @@ struct IPadArticlesView: View {
             }
         } else {
             ContentUnavailableView(
-                NSLocalizedString("articles.title", comment: ""),
+                "Selecteer een artikel",
                 systemImage: "rectangle.portrait.on.rectangle.portrait",
-                description: Text(NSLocalizedString("state.no_articles_desc", comment: ""))
+                description: Text("Kies een artikel uit de lijst.")
             )
         }
     }
 
-    private func categoryButton(for category: Category) -> some View {
-        Button {
-            selectedArticleID = nil
-            vm.selectedCategory = category
-            Task { await vm.userRefresh() }
-        } label: {
-            HStack {
-                Text(category.name)
-                Spacer()
-                if vm.selectedCategory?.id == category.id {
-                    Image(systemName: "checkmark")
-                        .foregroundStyle(Color.accentColor)
-                }
-            }
+    // MARK: - Helpers
+
+    private func selectFirstArticleIfNeeded() {
+        if selectedArticleID == nil {
+            selectedArticleID = vm.articles.first?.id
         }
-        .buttonStyle(.plain)
     }
 
-    private func articleButton(for article: Article) -> some View {
-        Button {
-            selectedArticleID = article.id
-        } label: {
-            ArticleRow(article: article)
-                .padding(.vertical, 4)
+    private func syncSelectionAfterReload() {
+        if let selectedArticleID, vm.articles.contains(where: { $0.id == selectedArticleID }) {
+            return
         }
-        .buttonStyle(.plain)
-        .listRowBackground(
-            article.id == selectedArticleID
-                ? Color.accentColor.opacity(0.12)
-                : Color.clear
-        )
+        self.selectedArticleID = vm.articles.first?.id
     }
 
     private func showAllCategories() {
         selectedArticleID = nil
         vm.selectedCategory = nil
         Task { await vm.userRefresh() }
-    }
-
-    private var filterBar: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(NSLocalizedString("articles.category_picker", comment: ""), systemImage: "line.3.horizontal.decrease.circle.fill")
-                .font(.headline)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    filterChip(
-                        title: NSLocalizedString("articles.all", comment: ""),
-                        isSelected: vm.selectedCategory == nil,
-                        action: showAllCategories
-                    )
-
-                    ForEach(vm.categories) { category in
-                        filterChip(
-                            title: category.name,
-                            isSelected: vm.selectedCategory?.id == category.id
-                        ) {
-                            selectedArticleID = nil
-                            vm.selectedCategory = category
-                            Task { await vm.userRefresh() }
-                        }
-                    }
-                }
-                .padding(.vertical, 2)
-            }
-        }
-    }
-
-    private func filterChip(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                }
-                Text(title)
-                    .lineLimit(1)
-            }
-            .font(.subheadline.weight(.semibold))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(
-                isSelected ? Color.accentColor : Color(UIColor.secondarySystemBackground),
-                in: Capsule()
-            )
-            .foregroundStyle(isSelected ? Color.white : Color.primary)
-        }
-        .buttonStyle(.plain)
     }
 }

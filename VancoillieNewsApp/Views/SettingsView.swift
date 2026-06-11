@@ -9,16 +9,54 @@ import SwiftUI
 import UserNotifications
 
 struct SettingsView: View {
-    // Notificaties / Thema / Taal
     @AppStorage("notifications.enabled") private var notificationsEnabled = false
     @AppStorage("app.theme") private var themeRaw: String = AppTheme.system.rawValue
     @AppStorage("app.language") private var languageRaw: String = "nl"
+    @AppStorage("user.firstname") private var firstName: String = ""
+    @AppStorage("onboarding.completed") private var onboardingCompleted = false
+    @AppStorage("pref.categories") private var savedCategories: String = ""
 
     @State private var showSettingsAlert = false
+    @State private var showCategoryPicker = false
 
     var body: some View {
         NavigationStack {
             Form {
+                // MARK: - Persoonlijk
+                Section(
+                    header: Text("Persoonlijk"),
+                    footer: Text("Je startpagina toont alleen artikels uit de categorieën die je hebt gekozen. Kies je niets, dan zie je alles.")
+                ) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Label("Mijn categorieën", systemImage: "slider.horizontal.3")
+                                .font(.body)
+                            Spacer()
+                            Text(savedCategories.isEmpty
+                                 ? "Alles"
+                                 : "\(savedCategories.split(separator: ",").count) gekozen")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Button {
+                            showCategoryPicker = true
+                        } label: {
+                            Text("Aanpassen")
+                                .font(.subheadline.weight(.medium))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(Brand.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .foregroundStyle(Brand.blue)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.vertical, 4)
+                }
+                .fullScreenCover(isPresented: $showCategoryPicker) {
+                    OnboardingView(isEditing: true)
+                }
+
                 // MARK: - Notifications
                 Section(header: Text(NSLocalizedString("settings.notifications", comment: ""))) {
                     Toggle(NSLocalizedString("settings.push", comment: ""),

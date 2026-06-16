@@ -11,15 +11,23 @@ struct HomeView: View {
         Set(savedCategories.split(separator: ",").compactMap { Int($0) })
     }
 
+    private var thisWeekArticles: [Article] {
+        let calendar = Calendar.current
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
+        let weekly = vm.articles.filter { $0.date >= startOfWeek }
+        return weekly.isEmpty ? vm.articles : weekly
+    }
+
     private var displayArticles: [Article] {
         let ids = preferredCategoryIDs
-        guard !ids.isEmpty else { return vm.articles }
-        let filtered = vm.articles.filter { ids.contains($0.categoryID) }
-        return filtered.isEmpty ? vm.articles : filtered
+        let weekly = thisWeekArticles
+        guard !ids.isEmpty else { return weekly }
+        let filtered = weekly.filter { ids.contains($0.categoryID) }
+        return filtered.isEmpty ? weekly : filtered
     }
 
     private var topBriefArticles: [Article] {
-        Array(vm.articles.prefix(4))
+        Array(thisWeekArticles.prefix(4))
     }
 
     private var greeting: String {

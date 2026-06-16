@@ -37,8 +37,12 @@ struct RootView: View {
                 .tag(1)
                 .tabItem { Label(NSLocalizedString("tab.articles", comment: ""), systemImage: "newspaper") }
 
-            SettingsView()
+            VancoillieView(selectedTab: $selectedTab)
                 .tag(2)
+                .tabItem { Label("Vancoillie", systemImage: "v.circle.fill") }
+
+            SettingsView()
+                .tag(3)
                 .tabItem { Label(NSLocalizedString("tab.settings", comment: ""), systemImage: "gearshape") }
         }
         .tint(Brand.blue)
